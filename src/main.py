@@ -1,5 +1,10 @@
 import os
 import shutil
+from htmlnode import HTMLNode, ParentNode
+from markdown_blocks import (
+    markdown_to_html_node,
+    extract_title
+)
 
 def copySourceFiles(base, items):
     source = items
@@ -11,6 +16,22 @@ def copySourceFiles(base, items):
             source[os.path.join(base, item)] = "file"
 
     return source
+
+
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}\n")
+    markdown_file = open(from_path).read()
+    template_file = open(template_path).read()
+
+    html = markdown_to_html_node(markdown_file).to_html()
+    title = extract_title(markdown_file)
+
+    page = template_file.replace("{{ Title }}", title).replace("{{ Content }}", html)
+    
+    output = open(dest_path, "x")
+    output.write(page)
+    output.close()
+
 
 def main():
     sourceFolder = os.getcwd()
@@ -30,5 +51,16 @@ def main():
     for key in source.keys():
         if source[key] == "file":
             shutil.copy(key, key.replace("static", "public"))
+
+    generate_page(sourceFolder + "/content/index.md", sourceFolder + "/template.html", destFolder + "/index.html")
+    generate_page(sourceFolder + "/content/blog/glorfindel/index.md", sourceFolder + "/template.html", destFolder + "/blog/glorfindel/index.html")
+    generate_page(sourceFolder + "/content/blog/tom/index.md", sourceFolder + "/template.html", destFolder + "/blog/tom/index.html")
+    generate_page(sourceFolder + "/content/blog/majesty/index.md", sourceFolder + "/template.html", destFolder + "/blog/majesty/index.html")
+    generate_page(sourceFolder + "/content/contact/index.md", sourceFolder + "/template.html", destFolder + "/contact/index.html")
      
 main()
+
+
+
+# Update your main.sh script to start a simple web server after generating the site. Use the same built-in Python server as before:
+
