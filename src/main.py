@@ -33,6 +33,22 @@ def generate_page(from_path, template_path, dest_path):
     output.close()
 
 
+def system_crawler(base, items):
+    source = items
+    for item in os.listdir(base):
+        print(f"{base}/{item}")
+        if os.path.isdir(f"{base}/{item}"):
+            system_crawler(f"{base}/{item}", source)
+        else:
+            source.append(os.path.join(base, item))
+
+    return source
+
+
+def generate_page_recursive(from_path_dir, template_path, dest_path_dir):
+    return 0
+
+
 def main():
     sourceFolder = os.getcwd()
     destFolder = os.getcwd() + "/public"
@@ -52,15 +68,8 @@ def main():
         if source[key] == "file":
             shutil.copy(key, key.replace("static", "public"))
 
-    generate_page(sourceFolder + "/content/index.md", sourceFolder + "/template.html", destFolder + "/index.html")
-    generate_page(sourceFolder + "/content/blog/glorfindel/index.md", sourceFolder + "/template.html", destFolder + "/blog/glorfindel/index.html")
-    generate_page(sourceFolder + "/content/blog/tom/index.md", sourceFolder + "/template.html", destFolder + "/blog/tom/index.html")
-    generate_page(sourceFolder + "/content/blog/majesty/index.md", sourceFolder + "/template.html", destFolder + "/blog/majesty/index.html")
-    generate_page(sourceFolder + "/content/contact/index.md", sourceFolder + "/template.html", destFolder + "/contact/index.html")
-     
+    markdown_list = system_crawler(os.getcwd() + "/content", [])
+    for md in markdown_list:
+        generate_page(md, sourceFolder + "/template.html", md.replace("content", "public").replace(".md", ".html"))
+
 main()
-
-
-
-# Update your main.sh script to start a simple web server after generating the site. Use the same built-in Python server as before:
-
