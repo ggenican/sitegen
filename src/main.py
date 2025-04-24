@@ -1,5 +1,7 @@
 import os
 import shutil
+import sys
+
 from htmlnode import HTMLNode, ParentNode
 from markdown_blocks import (
     markdown_to_html_node,
@@ -18,7 +20,7 @@ def copySourceFiles(base, items):
     return source
 
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}\n")
     markdown_file = open(from_path).read()
     template_file = open(template_path).read()
@@ -26,7 +28,7 @@ def generate_page(from_path, template_path, dest_path):
     html = markdown_to_html_node(markdown_file).to_html()
     title = extract_title(markdown_file)
 
-    page = template_file.replace("{{ Title }}", title).replace("{{ Content }}", html)
+    page = template_file.replace("{{ Title }}", title).replace("{{ Content }}", html).replace('href="/', f'href={basepath}').replace('src="/', f'src={basepath}')
     
     output = open(dest_path, "x")
     output.write(page)
@@ -36,7 +38,6 @@ def generate_page(from_path, template_path, dest_path):
 def system_crawler(base, items):
     source = items
     for item in os.listdir(base):
-        print(f"{base}/{item}")
         if os.path.isdir(f"{base}/{item}"):
             system_crawler(f"{base}/{item}", source)
         else:
@@ -45,13 +46,14 @@ def system_crawler(base, items):
     return source
 
 
-def generate_page_recursive(from_path_dir, template_path, dest_path_dir):
-    return 0
-
-
 def main():
+    if len(sys.argv) > 1:
+        basepath = sys.argv[1]
+    else:
+        basepath = "/"
+
     sourceFolder = os.getcwd()
-    destFolder = os.getcwd() + "/public"
+    destFolder = os.getcwd() + "/docs"
 
     if os.path.exists(destFolder):
         shutil.rmtree(destFolder)
@@ -61,15 +63,15 @@ def main():
     # first create the folder structure
     for key in source.keys():
         if source[key] == "folder":
-            os.mkdir(key.replace("static", "public"))
+            os.mkdir(key.replace("static", "docs"))
 
     # then copy all the files into the corresponding folder
     for key in source.keys():
         if source[key] == "file":
-            shutil.copy(key, key.replace("static", "public"))
+            shutil.copy(key, key.replace("static", "docs"))
 
     markdown_list = system_crawler(os.getcwd() + "/content", [])
     for md in markdown_list:
-        generate_page(md, sourceFolder + "/template.html", md.replace("content", "public").replace(".md", ".html"))
+        generate_page(md, sourceFolder + "/template.html", md.replace("content", "docs").replace(".md", ".html"), basepath)
 
 main()
